@@ -1,0 +1,99 @@
+FROM orboan/dind
+
+
+RUN  apt update -y
+RUN  apt-get install -y --no-install-recommends \
+ 	apt-transport-https \
+ 	build-essential \
+ 	supervisor \
+ 	openssh-server \
+ 	git \
+ 	libssl-dev \
+ 	python3 \
+ 	curl \
+ 	zip \
+ 	unzip \
+ 	python3-pip \
+ 	nodejs \
+ 	npm \
+ 	mysql-server \
+ 	mysql-client \
+ 	maven \
+ 	gradle \
+ 	wget
+
+#clean-layer
+COPY clean-layer.sh /
+RUN chmod +x /clean-layer.sh
+RUN /clean-layer.sh
+
+#instalar sdkman
+
+RUN curl -s "https://get.sdkman.io" | bash
+
+#grandle cli
+RUN wget https://services.gradle.org/distributions/gradle-7.3.3-bin.zip -P /tm>
+	unzip -d /opt/gradle /tmp/gradle-7.3.3-bin.zip
+
+
+#github cli
+RUN echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://package>
+
+#intalar node.js y npm
+RUN apt-get install -y nodejs && \
+	apt-get install -y npm
+
+
+#instalar VSCode
+RUN apt-get update && \
+	apt-get install -y libx11-xcb1 libxcb-dri3-0 libdrm2 libgbm1 && \
+	apt-get install -y gnupg2 && \
+	apt-get install -y software-properties-common
+
+RUN wget -q https://packages.microsoft.com/keys/microsoft.asc -O- | apt-key ad>
+	echo "deb [arch=amd64] https://packages.microsoft.com/repos/vscode stable >
+	apt-get update && \
+	apt-get install -y code
+
+#instalamos el cliente de docker
+RUN apt-get update && apt-get install -y \
+   apt-transport-https \
+   ca-certificates \
+   curl \
+   gnupg \
+   lsb-release
+RUN curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o>
+	echo \
+    	"deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.>
+    	$(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list >>
+RUN apt-get update && \
+	apt-get install -y docker-ce-cli
+
+#instalar docker compose
+RUN apt-get install -y docker-compose
+
+
+#INSTALAMOS mAVEN CLI
+RUN apt-get install -y maven
+
+# Crear un volumenpara el directorio $HOME del usuario "dev"
+VOLUME /home/dev
+#crear un volumen para el socket de Docker
+VOLUME /var/run/docker.socl
+#Crear un volumen para el directorio /var/lib/docker
+VOLUME /var/lib/docker
+#Exponemos el puerto 2222 del ssh
+EXPOSE 2222:22
+
+#Exponemos el puerto 8081 para acceder a VSCODE
+EXPOSE 8081
+#EXpose el puerto 3306 para MySQL
+EXPOSE 3306
+#Configuracion del supervisord
+COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+#COPY resources/etc/supervisor/*.conf /resources/etc/supervisor/conf.d
+
+#Ponemos el comando para que se ejecute cuando encendemos nuestro contenedor
+
+CMD ["/usr/bin/supervisord"]
+
